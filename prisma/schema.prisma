@@ -1,0 +1,119 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- ENUMS PARA RESTRICCIONES ---
+enum UserRole {
+  client
+  admin
+}
+
+enum CategoriaEscuderia {
+  karting
+  rally
+  formula
+  drifting
+}
+
+// --- MODELOS ---
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(150)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  role         UserRole @default(client)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  cartItems    CartItem[]
+  orders       Order[]
+  wishlists    Wishlist[]
+
+  @@map("users")
+}
+
+model Product {
+  id           Int                @id @default(autoincrement())
+  name         String             @db.VarChar(150)
+  description  String?            @db.Text
+  price        Decimal            @db.Decimal(10, 2)
+  stock        Int                @default(0)
+  marca        String?
+  category     CategoriaEscuderia @default(karting) // Enum asegurado
+  imageUrl     String?            @map("image_url") @db.VarChar(255)
+  createdAt    DateTime           @default(now()) @map("created_at")
+
+  cartItems    CartItem[]
+  orderDetails OrderDetail[]
+  wishlists    Wishlist[]
+
+  @@map("products")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  productId Int?     @map("product_id")
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now()) @map("created_at")
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+model Order {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  totalAmount Decimal  @map("total_amount") @db.Decimal(10, 2)
+  status      String?  @default("completed") @db.VarChar(50)
+  receiptUrl  String?  @map("receipt_url") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  orderDetails OrderDetail[]
+
+  @@map("orders")
+}
+
+model OrderDetail {
+  id        Int     @id @default(autoincrement())
+  orderId   Int?    @map("order_id")
+  productId Int?    @map("product_id")
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("order_details")
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  productId Int?     @map("product_id")
+  addedAt   DateTime @default(now()) @map("added_at")
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("wishlists")
+}
+
+model Notification {
+  id             Int      @id @default(autoincrement())
+  titulo         String   @db.VarChar(150)
+  mensaje        String   @db.Text
+  horaProgramada String   @db.VarChar(50)
+  tipo           String   @default("push") @db.VarChar(50)
+  leida          Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
