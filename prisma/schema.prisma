@@ -1,6 +1,6 @@
 datasource db {
   provider = "mysql"
-url      = "mysql://root:fkqQuojsjblZLfPXSpoJOo@mysql.railway.internal:3306/railway"
+  url      = "mysql://root:fkqQuojsjblZLfPXSpoJOo@mysql.railway.internal:3306/railway"
 }
 
 generator client {
