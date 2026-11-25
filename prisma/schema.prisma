@@ -12,15 +12,6 @@ enum UserRole {
   client
   admin
 }
-
-enum CategoriaEscuderia {
-  karting
-  rally
-  formula
-  drifting
-}
-
-// --- MODELOS ---
 model User {
   id           Int      @id @default(autoincrement())
   name         String   @db.VarChar(100)
@@ -28,6 +19,7 @@ model User {
   passwordHash String   @map("password_hash") @db.VarChar(255)
   role         UserRole @default(client)
   createdAt    DateTime @default(now()) @map("created_at")
+  avatarUrl    String?  @default("/avatars/hombre1.jpg") @map("avatar_url") @db.VarChar(255)
 
   cartItems    CartItem[]
   orders       Order[]
@@ -36,20 +28,42 @@ model User {
   @@map("users")
 }
 
-model Product {
-  id           Int                @id @default(autoincrement())
-  name         String             @db.VarChar(150)
-  description  String?            @db.Text
-  price        Decimal            @db.Decimal(10, 2)
-  stock        Int                @default(0)
-  marca        String?
-  category     CategoriaEscuderia @default(karting) // Enum asegurado
-  imageUrl     String?            @map("image_url") @db.VarChar(255)
-  createdAt    DateTime           @default(now()) @map("created_at")
+model Avatar {
+  id       Int     @id @default(autoincrement())
+  nombre   String  @db.VarChar(100)
+  imageUrl String  @map("image_url") @db.VarChar(255)
+  activo   Boolean @default(true)
 
-  cartItems    CartItem[]
-  orderDetails OrderDetail[]
-  wishlists    Wishlist[]
+  @@map("avatars")
+}
+
+model Product {
+  id                 Int      @id @default(autoincrement())
+  name               String   @db.VarChar(150)
+  sku                String?  @db.VarChar(100)
+  description        String?  @db.Text
+  price              Decimal  @db.Decimal(10, 2)
+  stock              Int      @default(0)
+  marca              String?  @db.VarChar(100)
+  category           String   @default("Supercargadores") @db.VarChar(100)
+  tipo_supercargador String?  @db.VarChar(100)
+  nivel_kit          String?  @db.VarChar(100)
+  plataforma_motor   String?  @db.VarChar(150)
+  rango_anio         String?  @db.VarChar(100)
+  potencia_max       String?  @db.VarChar(100)
+  boost_base         String?  @db.VarChar(100)
+  enfriamiento       String?  @db.VarChar(100)
+  disponibilidad     String?  @db.VarChar(100)
+  tiempo_entrega     String?  @db.VarChar(100)
+  incluye_caja       String?  @db.Text
+  notas_instalacion  String?  @db.Text
+  imageUrl           String?  @map("image_url") @db.VarChar(255)
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  cartItems          CartItem[]
+  orderDetails       OrderDetail[]
+  wishlists          Wishlist[]
+  manual             ProductManual?
 
   @@map("products")
 }
@@ -75,7 +89,7 @@ model Order {
   receiptUrl  String?  @map("receipt_url") @db.VarChar(255)
   createdAt   DateTime @default(now()) @map("created_at")
 
-  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   orderDetails OrderDetail[]
 
   @@map("orders")
@@ -116,4 +130,19 @@ model Notification {
   createdAt      DateTime @default(now()) @map("created_at")
 
   @@map("notifications")
+}
+
+model ProductManual {
+  id            Int      @id @default(autoincrement())
+  productId     Int      @unique @map("product_id")
+  title         String   @db.VarChar(180)
+  manualUrl     String   @map("manual_url") @db.VarChar(500)
+  fileName      String?  @map("file_name") @db.VarChar(255)
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_manuals")
 }
